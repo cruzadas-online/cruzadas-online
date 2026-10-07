@@ -1,5 +1,6 @@
 import type {
   GameItem,
+  QuizGroup,
   QuizDetail,
   StartAttemptResponse,
   QuizResult,
@@ -43,11 +44,21 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
-  async getGamesCatalog(): Promise<GameItem[]> {
-    const res = await fetch(`${API_BASE_URL}/games`, {
+  async getGamesCatalog(groupSlug?: string): Promise<GameItem[]> {
+    const url = groupSlug
+      ? `${API_BASE_URL}/games?group=${encodeURIComponent(groupSlug)}`
+      : `${API_BASE_URL}/games`;
+    const res = await fetch(url, {
       headers: { Accept: 'application/json' },
     });
     return handleResponse<GameItem[]>(res);
+  },
+
+  async getQuizGroups(): Promise<QuizGroup[]> {
+    const res = await fetch(`${API_BASE_URL}/games/groups`, {
+      headers: { Accept: 'application/json' },
+    });
+    return handleResponse<QuizGroup[]>(res);
   },
 
   async getQuizDetail(slug: string): Promise<QuizDetail> {
@@ -59,6 +70,17 @@ export const api = {
 
   async startAttempt(slug: string): Promise<StartAttemptResponse> {
     const res = await fetch(`${API_BASE_URL}/quizzes/${encodeURIComponent(slug)}/attempts`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    return handleResponse<StartAttemptResponse>(res);
+  },
+
+  async startRandomAttempt(): Promise<StartAttemptResponse> {
+    const res = await fetch(`${API_BASE_URL}/quizzes/random/attempts`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',

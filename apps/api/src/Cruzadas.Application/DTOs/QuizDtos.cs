@@ -7,7 +7,18 @@ public record GameItemDto(
     string Description,
     string Category,
     string Status,
-    bool IsAvailable);
+    bool IsAvailable,
+    string DifficultyLevel = "Iniciante",
+    string? GroupSlug = null);
+
+public record QuizGroupDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    string Description,
+    string Icon,
+    int DisplayOrder,
+    IReadOnlyList<GameItemDto> Quizzes);
 
 public record QuizDetailDto(
     Guid Id,

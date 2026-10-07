@@ -205,4 +205,56 @@ public class QuizServiceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             service.CompleteAttemptAsync(quiz.Slug, Guid.NewGuid(), request));
     }
+
+    [Fact]
+    public async Task GetQuizGroupsAsync_ReturnsGroupsWithQuizzes()
+    {
+        using var context = CreateInMemoryDbContext();
+        var group = new QuizGroup(Guid.NewGuid(), "Doutrina", "doutrina", "Desc", "church", 1);
+        var quiz = SeedQuiz(context, isPublished: true, slug: "quiz-doutrina");
+        group.AddQuiz(quiz);
+        context.QuizGroups.Add(group);
+        await context.SaveChangesAsync();
+
+        var service = new QuizService(context, NullLogger<QuizService>.Instance);
+        var groups = await service.GetQuizGroupsAsync();
+
+        Assert.Single(groups);
+        Assert.Equal("Doutrina", groups[0].Name);
+        Assert.Single(groups[0].Quizzes);
+    }
+
+    [Fact]
+    public async Task GetGamesCatalogAsync_WithGroupFilter_ReturnsOnlyFilteredQuizzes()
+    {
+        using var context = CreateInMemoryDbContext();
+        var group1 = new QuizGroup(Guid.NewGuid(), "Doutrina", "doutrina", "Desc", "church", 1);
+        var group2 = new QuizGroup(Guid.NewGuid(), "Bíblia", "biblia", "Desc", "book", 2);
+        var q1 = SeedQuiz(context, isPublished: true, slug: "quiz-1");
+        var q2 = SeedQuiz(context, isPublished: true, slug: "quiz-2");
+        group1.AddQuiz(q1);
+        group2.AddQuiz(q2);
+        context.QuizGroups.AddRange(group1, group2);
+        await context.SaveChangesAsync();
+
+        var service = new QuizService(context, NullLogger<QuizService>.Instance);
+        var games = await service.GetGamesCatalogAsync(groupSlug: "biblia");
+
+        Assert.Single(games);
+        Assert.Equal("quiz-2", games[0].Slug);
+    }
+
+    [Fact]
+    public async Task StartRandomAttemptAsync_SelectsPublishedQuizAndStartsAttempt()
+    {
+        using var context = CreateInMemoryDbContext();
+        SeedQuiz(context, isPublished: true, slug: "quiz-random");
+
+        var service = new QuizService(context, NullLogger<QuizService>.Instance);
+        var attempt = await service.StartRandomAttemptAsync();
+
+        Assert.NotNull(attempt);
+        Assert.Equal("Fundamentos da Fé", attempt.QuizTitle);
+        Assert.Equal(2, attempt.TotalQuestions);
+    }
 }

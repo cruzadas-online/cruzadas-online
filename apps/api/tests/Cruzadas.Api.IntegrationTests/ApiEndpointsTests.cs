@@ -121,4 +121,26 @@ public class ApiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task GetQuizGroups_ReturnsOkWithGroups()
+    {
+        var response = await _client.GetAsync("/api/v1/games/groups");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var groups = await response.Content.ReadFromJsonAsync<List<QuizGroupDto>>();
+        Assert.NotNull(groups);
+    }
+
+    [Fact]
+    public async Task StartRandomQuizAttempt_ReturnsCreatedAttempt()
+    {
+        var response = await _client.PostAsync("/api/v1/quizzes/random/attempts", null);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var attempt = await response.Content.ReadFromJsonAsync<StartAttemptResponseDto>();
+        Assert.NotNull(attempt);
+        Assert.NotEqual(Guid.Empty, attempt.AttemptId);
+        Assert.NotEmpty(attempt.Questions);
+    }
 }

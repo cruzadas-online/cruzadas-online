@@ -13,6 +13,9 @@ public class Quiz
     public bool IsPublished { get; private set; }
     public int QuestionsPerAttempt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public Guid? GroupId { get; private set; }
+    public QuizGroup? Group { get; private set; }
+    public string DifficultyLevel { get; private set; } = "Iniciante";
 
     public IReadOnlyCollection<Question> Questions => _questions.AsReadOnly();
 
@@ -26,7 +29,9 @@ public class Quiz
         string description,
         bool isPublished,
         int questionsPerAttempt,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        Guid? groupId = null,
+        string difficultyLevel = "Iniciante")
     {
         if (id == Guid.Empty) throw new ArgumentException("Id não pode ser vazio.", nameof(id));
         if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Título é obrigatório.", nameof(title));
@@ -40,6 +45,20 @@ public class Quiz
         IsPublished = isPublished;
         QuestionsPerAttempt = questionsPerAttempt;
         CreatedAt = createdAt;
+        GroupId = groupId;
+        DifficultyLevel = string.IsNullOrWhiteSpace(difficultyLevel) ? "Iniciante" : difficultyLevel.Trim();
+    }
+
+    public void AssignToGroup(Guid groupId)
+    {
+        if (groupId == Guid.Empty) throw new ArgumentException("GroupId não pode ser vazio.", nameof(groupId));
+        GroupId = groupId;
+    }
+
+    public void SetDifficultyLevel(string difficultyLevel)
+    {
+        if (string.IsNullOrWhiteSpace(difficultyLevel)) throw new ArgumentException("Dificuldade é obrigatória.", nameof(difficultyLevel));
+        DifficultyLevel = difficultyLevel.Trim();
     }
 
     public void AddQuestion(Question question)

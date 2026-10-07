@@ -4,15 +4,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from '../App';
 
 describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
+  const mockGroups = [
+    {
+      id: 'grp-1',
+      name: 'Doutrina e Sacramentos',
+      slug: 'doutrina-sacramentos',
+      description: 'Fundamentos da fé apostólica',
+      icon: 'church',
+      displayOrder: 1,
+      quizzes: [],
+    },
+  ];
+
   const mockGames = [
     {
       id: 'quiz-1',
       title: 'Quiz Católico — Fundamentos da Fé',
       slug: 'fundamentos-da-fe',
       description: 'Teste seus conhecimentos sobre a Sagrada Escritura e sacramentos.',
-      category: 'Quiz',
+      category: 'Doutrina e Sacramentos',
       status: 'Disponível',
       isAvailable: true,
+      difficultyLevel: 'Iniciante',
+      groupSlug: 'doutrina-sacramentos',
     },
     {
       id: 'future-1',
@@ -98,6 +112,10 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL) => {
       const url = input.toString();
 
+      if (url.includes('/games/groups')) {
+        return Promise.resolve(new Response(JSON.stringify(mockGroups), { status: 200 }));
+      }
+
       if (url.includes('/games')) {
         return Promise.resolve(new Response(JSON.stringify(mockGames), { status: 200 }));
       }
@@ -115,10 +133,11 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
 
     render(<App />);
 
-    // 1. Catálogo inicial exibido
+    // 1. Catálogo inicial exibido com os grupos
     await waitFor(() => {
       expect(screen.getByText('Quiz Católico — Fundamentos da Fé')).toBeInTheDocument();
       expect(screen.getByText('Palavras Cruzadas da Tradição')).toBeInTheDocument();
+      expect(screen.getAllByText('Doutrina e Sacramentos').length).toBeGreaterThan(0);
     });
 
     // 2. Iniciar partida
@@ -167,9 +186,43 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
     expect(playAgainBtn).toBeInTheDocument();
     await user.click(playAgainBtn);
 
-    // Deve voltar para a tela de jogo
     await waitFor(() => {
       expect(screen.getByText('Questão 1 de 2')).toBeInTheDocument();
+    });
+  });
+
+  it('deve permitir iniciar uma partida rápida com quiz aleatório a partir do botão hero da home', async () => {
+    const user = userEvent.setup();
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      const url = input.toString();
+
+      if (url.includes('/games/groups')) {
+        return Promise.resolve(new Response(JSON.stringify(mockGroups), { status: 200 }));
+      }
+
+      if (url.includes('/games')) {
+        return Promise.resolve(new Response(JSON.stringify(mockGames), { status: 200 }));
+      }
+
+      if (url.includes('/random/attempts')) {
+        return Promise.resolve(new Response(JSON.stringify(mockAttempt), { status: 201 }));
+      }
+
+      return Promise.reject(new Error(`Unhandled request to ${url}`));
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Partida Rápida Desafio')).toBeInTheDocument();
+    });
+
+    const quickPlayBtn = screen.getByRole('button', { name: /jogar partida rápida com quiz aleatório/i });
+    await user.click(quickPlayBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Quantos são os sacramentos da Igreja Católica?')).toBeInTheDocument();
     });
   });
 });

@@ -7,8 +7,14 @@ Plataforma web de jogos voltada à formação intelectual, cultura cristã, hist
 ## 1. Visão Geral do MVP v0.1 — Quiz Católico
 
 Este repositório contém o primeiro *vertical slice* completo do **Cruzadas.online**:
-- **Catálogo inicial de jogos**: Exibição dos jogos disponíveis com contadores e status de publicação.
-- **Quiz Católico — Fundamentos da Fé**: 15 questões autênticas baseadas em fontes católicas primárias (Bíblia de Jerusalém, Catecismo da Igreja Católica, Concílio de Nicéia e Tradição).
+- **Catálogo por Grupos Temáticos**: Organização dos jogos em categorias doutrinárias, bíblicas, históricas e litúrgicas:
+  - ⛪ **Doutrina e Sacramentos**: *Quiz Católico — Fundamentos da Fé* (Iniciante)
+  - 📖 **Sagradas Escrituras**: *Os Evangelhos e o Cânon Bíblico* (Intermediário)
+  - 🛡️ **História e Tradição**: *Grandes Concílios e Santos Mártires* (Avançado)
+  - 🔥 **Liturgia e Oração**: *O Santo Sacrifício da Missa* (Iniciante)
+- **Acesso Híbrido ao Jogo**:
+  - **🎲 Partida Rápida (1-clique)**: Sorteia aleatoriamente qualquer quiz publicado e inicia o desafio imediatamente.
+  - **Catálogo Curado com Filtros**: Abas/chips para filtrar os quizzes por tema e visualizar o nível de dificuldade.
 - **Ciclo completo da partida**:
   - Seleção aleatória de questões por tentativa (`QuizAttempt`).
   - Navegação fluida e acessível questão a questão com suporte a atalhos de teclado (`1-4`, `A-D`, `Enter`).
@@ -145,7 +151,7 @@ Executa todos os testes de Domínio, Aplicação e Integração HTTP E2E:
 ```bash
 dotnet test apps/api/Cruzadas.slnx
 ```
-- **Total**: 24 testes executados (24 aprovados, 0 falhas).
+- **Total**: 31 testes executados (31 aprovados, 0 falhas).
 
 ### Testes do Frontend (Vitest)
 Executa a validação de componentes, renderização e fluxo completo do usuário:
@@ -153,7 +159,7 @@ Executa a validação de componentes, renderização e fluxo completo do usuári
 cd apps/web
 npm test -- --run
 ```
-- **Total**: 100% de sucesso.
+- **Total**: 100% de sucesso (2 testes de integração de fluxo).
 
 ### Validação de Lint e Build do Frontend
 ```bash
@@ -169,9 +175,11 @@ npm run build
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
 | `GET` | `/health` | Health check da API e conectividade do banco |
-| `GET` | `/api/v1/games` | Lista de jogos disponíveis no catálogo |
+| `GET` | `/api/v1/games` | Lista de jogos disponíveis no catálogo (suporta `?group={slug}`) |
+| `GET` | `/api/v1/games/groups` | Lista os grupos e categorias temáticas de quiz com seus jogos associados |
 | `GET` | `/api/v1/quizzes/{slug}` | Detalhes e metadados de um quiz específico |
-| `POST` | `/api/v1/quizzes/{slug}/attempts` | Inicia uma nova partida anônima com questões sorteadas |
+| `POST` | `/api/v1/quizzes/{slug}/attempts` | Inicia uma nova partida com questões sorteadas |
+| `POST` | `/api/v1/quizzes/random/attempts` | Inicia uma partida rápida com sorteio aleatório entre todos os quizzes |
 | `POST` | `/api/v1/quizzes/{slug}/attempts/{attemptId}/complete` | Envia as respostas da partida, calcula nota e retorna revisão detalhada |
 | `GET` | `/scalar/v1` | Documentação interativa da API via Scalar OpenAPI |
 

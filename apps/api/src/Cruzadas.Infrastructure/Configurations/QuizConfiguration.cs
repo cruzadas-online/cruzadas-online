@@ -36,6 +36,16 @@ public class QuizConfiguration : IEntityTypeConfiguration<Quiz>
         builder.Property(q => q.CreatedAt)
             .IsRequired();
 
+        builder.Property(q => q.DifficultyLevel)
+            .IsRequired()
+            .HasMaxLength(50)
+            .HasDefaultValue("Iniciante");
+
+        builder.HasOne(q => q.Group)
+            .WithMany(g => g.Quizzes)
+            .HasForeignKey(q => q.GroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(q => q.Questions)
             .WithOne()
             .HasForeignKey(q => q.QuizId)
