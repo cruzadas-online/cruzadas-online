@@ -1,0 +1,123 @@
+import React from 'react';
+import type { QuizResult } from '../types';
+
+interface QuizResultViewProps {
+  result: QuizResult;
+  onPlayAgain: () => void;
+  onBackToCatalog: () => void;
+}
+
+export const QuizResultView: React.FC<QuizResultViewProps> = ({
+  result,
+  onPlayAgain,
+  onBackToCatalog,
+}) => {
+  const getFeedbackMessage = (percentage: number) => {
+    if (percentage >= 90) {
+      return 'Excelente domínio! Sua formação bíblica e doutrinária demonstrou notável solidez e precisão.';
+    }
+    if (percentage >= 70) {
+      return 'Muito bom desempenho! Você demonstra uma base segura sobre a Sagrada Escritura, os sacramentos e a Tradição.';
+    }
+    if (percentage >= 50) {
+      return 'Bom aproveitamento. Há fundamentos firmes e belas oportunidades para continuar enriquecendo seu conhecimento sobre a fé.';
+    }
+    return 'Um convite ao aprofundamento. A tradição bíblica e o Catecismo oferecem tesouros riquíssimos para fortalecer seus fundamentos.';
+  };
+
+  return (
+    <div className="result-container" role="region" aria-label="Resultado da Partida">
+      {/* Score Summary */}
+      <section className="result-hero">
+        <p className="result-badge">Partida Concluída</p>
+        <h1 className="result-score-number">
+          {Math.round(result.scorePercentage)}
+          <span>%</span>
+        </h1>
+        <p className="result-message">{getFeedbackMessage(result.scorePercentage)}</p>
+
+        <div className="result-stats-row">
+          <div className="stat-item">
+            <p className="stat-value">{result.correctAnswersCount}</p>
+            <p className="stat-label">Acertos</p>
+          </div>
+          <div className="stat-item">
+            <p className="stat-value">{result.totalQuestions - result.correctAnswersCount}</p>
+            <p className="stat-label">Erros</p>
+          </div>
+          <div className="stat-item">
+            <p className="stat-value">{result.totalQuestions}</p>
+            <p className="stat-label">Total de Questões</p>
+          </div>
+        </div>
+
+        <div className="result-actions">
+          <button
+            onClick={onPlayAgain}
+            className="btn btn-primary"
+            aria-label="Jogar Novamente"
+          >
+            ↻ Jogar Novamente
+          </button>
+          <button
+            onClick={onBackToCatalog}
+            className="btn btn-secondary"
+            aria-label="Voltar aos Jogos"
+          >
+            ← Voltar aos Jogos
+          </button>
+        </div>
+      </section>
+
+      {/* Review Section */}
+      <section className="reviews-section" aria-labelledby="reviews-heading">
+        <h2 id="reviews-heading" className="reviews-title">
+          Revisão Detalhada das Respostas
+        </h2>
+
+        {result.questions.map((q, idx) => (
+          <article
+            key={q.questionId}
+            className={`review-card ${q.isCorrect ? 'correct' : 'incorrect'}`}
+          >
+            <div className="review-card-header">
+              <span className="review-question-num">Questão {idx + 1}</span>
+              <span
+                className={`review-status-pill ${q.isCorrect ? 'correct' : 'incorrect'}`}
+              >
+                {q.isCorrect ? '✓ Acertou' : '✕ Incorreta'}
+              </span>
+            </div>
+
+            <h3 className="review-question-text">{q.questionText}</h3>
+
+            <div className="review-answers-box">
+              <div className="review-answer-line">
+                <strong>Sua resposta: </strong>
+                <span style={{ color: q.isCorrect ? 'var(--color-success)' : 'var(--color-error)' }}>
+                  {q.selectedOptionText || '(Não respondida)'}
+                </span>
+              </div>
+              {!q.isCorrect && (
+                <div className="review-answer-line">
+                  <strong>Resposta correta: </strong>
+                  <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                    {q.correctOptionText}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <p className="review-explanation">{q.explanation}</p>
+
+            {q.sourceReference && (
+              <p className="review-reference">
+                <span>📖 Fonte:</span> {q.sourceReference}
+              </p>
+            )}
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+};

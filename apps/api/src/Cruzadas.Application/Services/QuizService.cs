@@ -1,0 +1,233 @@
+using Cruzadas.Application.Common;
+using Cruzadas.Application.DTOs;
+using Cruzadas.Application.Interfaces;
+using Cruzadas.Domain.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace Cruzadas.Application.Services;
+
+public class QuizService : IQuizService
+{
+    private readonly ICruzadasDbContext _context;
+    private readonly ILogger<QuizService> _logger;
+
+    public QuizService(ICruzadasDbContext context, ILogger<QuizService> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task<IReadOnlyList<GameItemDto>> GetGamesCatalogAsync(CancellationToken cancellationToken = default)
+    {
+        var publishedQuizzes = await _context.Quizzes
+            .AsNoTracking()
+            .Where(q => q.IsPublished)
+            .OrderBy(q => q.Title)
+            .ToListAsync(cancellationToken);
+
+        var games = new List<GameItemDto>();
+
+        // Published playable quizzes
+        foreach (var q in publishedQuizzes)
+        {
+            games.Add(new GameItemDto(
+                Id: q.Id.ToString(),
+                Title: q.Title,
+                Slug: q.Slug,
+                Description: q.Description,
+                Category: "Quiz",
+                Status: "Disponível",
+                IsAvailable: true));
+        }
+
+        // Showcase coming games (without false functionality)
+        games.Add(new GameItemDto(
+            Id: "future-crossword",
+            Title: "Palavras Cruzadas da Tradição",
+            Slug: "palavras-cruzadas",
+            Description: "Cruzadas bíblicas e históricas para exercitar a memória católica.",
+            Category: "Palavras Cruzadas",
+            Status: "Em breve",
+            IsAvailable: false));
+
+        games.Add(new GameItemDto(
+            Id: "future-wordsearch",
+            Title: "Caça-Palavras dos Santos",
+            Slug: "caca-palavras",
+            Description: "Encontre nomes de santos, virtudes e termos litúrgicos.",
+            Category: "Caça-Palavras",
+            Status: "Em breve",
+            IsAvailable: false));
+
+        return games;
+    }
+
+    public async Task<QuizDetailDto> GetQuizBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+
+        var quiz = await _context.Quizzes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(q => q.Slug == normalizedSlug, cancellationToken);
+
+        if (quiz == null)
+        {
+            throw new KeyNotFoundException($"Quiz com slug '{slug}' não encontrado.");
+        }
+
+        if (!quiz.IsPublished)
+        {
+            throw new QuizNotPublishedException(quiz.Slug);
+        }
+
+        return new QuizDetailDto(
+            Id: quiz.Id,
+            Title: quiz.Title,
+            Slug: quiz.Slug,
+            Description: quiz.Description,
+            QuestionsPerAttempt: quiz.QuestionsPerAttempt);
+    }
+
+    public async Task<StartAttemptResponseDto> StartAttemptAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+
+        var quiz = await _context.Quizzes
+            .Include(q => q.Questions)
+                .ThenInclude(q => q.Options)
+            .FirstOrDefaultAsync(q => q.Slug == normalizedSlug, cancellationToken);
+
+        if (quiz == null)
+        {
+            throw new KeyNotFoundException($"Quiz com slug '{slug}' não encontrado.");
+        }
+
+        if (!quiz.IsPublished)
+        {
+            throw new QuizNotPublishedException(quiz.Slug);
+        }
+
+        var attempt = quiz.StartAttempt();
+        _context.QuizAttempts.Add(attempt);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Tentativa iniciada. QuizId: {QuizId}, AttemptId: {AttemptId}, Questoes: {Total}",
+            quiz.Id, attempt.Id, attempt.TotalQuestions);
+
+        var questionsMap = quiz.Questions.ToDictionary(q => q.Id);
+        var orderedAttemptQuestions = attempt.AttemptQuestions.OrderBy(aq => aq.Order).ToList();
+
+        var questionDtos = new List<QuizQuestionDto>();
+        foreach (var aq in orderedAttemptQuestions)
+        {
+            if (questionsMap.TryGetValue(aq.QuestionId, out var q))
+            {
+                // Never expose IsCorrect to client
+                var options = q.Options
+                    .OrderBy(o => o.DisplayOrder)
+                    .Select(o => new AnswerOptionDto(o.Id, o.Text, o.DisplayOrder))
+                    .ToList();
+
+                questionDtos.Add(new QuizQuestionDto(q.Id, q.Text, aq.Order, options));
+            }
+        }
+
+        return new StartAttemptResponseDto(
+            AttemptId: attempt.Id,
+            QuizId: quiz.Id,
+            QuizTitle: quiz.Title,
+            TotalQuestions: attempt.TotalQuestions,
+            Questions: questionDtos);
+    }
+
+    public async Task<QuizResultDto> CompleteAttemptAsync(
+        string slug,
+        Guid attemptId,
+        SubmitAnswersRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedSlug = slug.Trim().ToLowerInvariant();
+
+        var quiz = await _context.Quizzes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(q => q.Slug == normalizedSlug, cancellationToken);
+
+        if (quiz == null)
+        {
+            throw new KeyNotFoundException($"Quiz com slug '{slug}' não encontrado.");
+        }
+
+        var attempt = await _context.QuizAttempts
+            .Include(a => a.AttemptQuestions)
+            .Include(a => a.Answers)
+            .FirstOrDefaultAsync(a => a.Id == attemptId && a.QuizId == quiz.Id, cancellationToken);
+
+        if (attempt == null)
+        {
+            throw new KeyNotFoundException($"Tentativa '{attemptId}' não encontrada para o quiz '{slug}'.");
+        }
+
+        if (attempt.IsCompleted)
+        {
+            throw new AttemptAlreadyCompletedException(attempt.Id);
+        }
+
+        var attemptQuestionIds = attempt.AttemptQuestions.Select(aq => aq.QuestionId).ToList();
+
+        var questions = await _context.Questions
+            .Include(q => q.Options)
+            .Where(q => attemptQuestionIds.Contains(q.Id))
+            .ToListAsync(cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        attempt.Complete(request.Answers ?? [], questions, now);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Tentativa finalizada. AttemptId: {AttemptId}, Acertos: {Correct}/{Total} ({Percentage}%)",
+            attempt.Id, attempt.CorrectAnswersCount, attempt.TotalQuestions, attempt.ScorePercentage);
+
+        var questionsMap = questions.ToDictionary(q => q.Id);
+        var answersMap = attempt.Answers.ToDictionary(a => a.QuestionId);
+
+        var orderedAttemptQuestions = attempt.AttemptQuestions.OrderBy(aq => aq.Order).ToList();
+        var reviews = new List<QuestionReviewDto>();
+
+        foreach (var aq in orderedAttemptQuestions)
+        {
+            if (!questionsMap.TryGetValue(aq.QuestionId, out var q))
+                continue;
+
+            answersMap.TryGetValue(aq.QuestionId, out var ans);
+
+            var correctOpt = q.GetCorrectOption();
+            var selectedOpt = ans != null
+                ? q.Options.FirstOrDefault(o => o.Id == ans.SelectedOptionId)
+                : null;
+
+            reviews.Add(new QuestionReviewDto(
+                QuestionId: q.Id,
+                QuestionText: q.Text,
+                SelectedOptionId: ans?.SelectedOptionId,
+                SelectedOptionText: selectedOpt?.Text,
+                CorrectOptionId: correctOpt?.Id ?? Guid.Empty,
+                CorrectOptionText: correctOpt?.Text ?? "Opção correta",
+                IsCorrect: ans?.IsCorrect ?? false,
+                Explanation: q.Explanation,
+                SourceReference: q.SourceReference));
+        }
+
+        return new QuizResultDto(
+            AttemptId: attempt.Id,
+            QuizId: quiz.Id,
+            QuizTitle: quiz.Title,
+            TotalQuestions: attempt.TotalQuestions,
+            CorrectAnswersCount: attempt.CorrectAnswersCount,
+            ScorePercentage: attempt.ScorePercentage,
+            StartedAt: attempt.StartedAt,
+            CompletedAt: attempt.CompletedAt ?? now,
+            Questions: reviews);
+    }
+}

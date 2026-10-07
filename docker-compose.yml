@@ -1,0 +1,62 @@
+name: cruzadas-online
+
+services:
+  cruzadas-db:
+    image: postgres:alpine
+    container_name: cruzadas-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cruzadas}
+      POSTGRES_USER: ${POSTGRES_USER:-cruzadas_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cruzadas_secure_password_2026}
+    ports:
+      - "${CRUZADAS_DB_PORT:-55432}:5432"
+    volumes:
+      - cruzadas_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cruzadas_user} -d ${POSTGRES_DB:-cruzadas}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cruzadas_net
+    restart: unless-stopped
+
+  cruzadas-api:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    container_name: cruzadas-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__Provider: Npgsql
+      ConnectionStrings__DefaultConnection: Host=cruzadas-db;Port=5432;Database=${POSTGRES_DB:-cruzadas};Username=${POSTGRES_USER:-cruzadas_user};Password=${POSTGRES_PASSWORD:-cruzadas_secure_password_2026}
+    ports:
+      - "${CRUZADAS_API_PORT:-5185}:8080"
+    depends_on:
+      cruzadas-db:
+        condition: service_healthy
+    networks:
+      - cruzadas_net
+    restart: unless-stopped
+
+  cruzadas-web:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+    container_name: cruzadas-web
+    ports:
+      - "${CRUZADAS_WEB_PORT:-5175}:80"
+    depends_on:
+      - cruzadas-api
+    networks:
+      - cruzadas_net
+    restart: unless-stopped
+
+networks:
+  cruzadas_net:
+    name: cruzadas_net
+    driver: bridge
+
+volumes:
+  cruzadas_db_data:
+    name: cruzadas_db_data
