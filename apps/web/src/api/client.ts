@@ -6,7 +6,7 @@ import type {
   QuizResult,
 } from '../types';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5185/api/v1').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api/v1').replace(/\/$/, '');
 
 export class ApiError extends Error {
   public status: number;
