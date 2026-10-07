@@ -1,0 +1,14 @@
+using Cruzadas.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Cruzadas.Application.Common;
+
+public interface ICruzadasDbContext
+{
+    DbSet<Quiz> Quizzes { get; }
+    DbSet<Question> Questions { get; }
+    DbSet<QuizAttempt> QuizAttempts { get; }
+    DbSet<AttemptAnswer> AttemptAnswers { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

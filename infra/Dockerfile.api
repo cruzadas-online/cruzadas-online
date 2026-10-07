@@ -1,0 +1,25 @@
+# Stage 1: Build .NET 10 API
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy project files for caching restore layer
+COPY apps/api/src/Cruzadas.Domain/Cruzadas.Domain.csproj apps/api/src/Cruzadas.Domain/
+COPY apps/api/src/Cruzadas.Application/Cruzadas.Application.csproj apps/api/src/Cruzadas.Application/
+COPY apps/api/src/Cruzadas.Infrastructure/Cruzadas.Infrastructure.csproj apps/api/src/Cruzadas.Infrastructure/
+COPY apps/api/src/Cruzadas.Api/Cruzadas.Api.csproj apps/api/src/Cruzadas.Api/
+
+RUN dotnet restore apps/api/src/Cruzadas.Api/Cruzadas.Api.csproj
+
+# Copy source code and build
+COPY apps/api/src/ apps/api/src/
+RUN dotnet publish apps/api/src/Cruzadas.Api/Cruzadas.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "Cruzadas.Api.dll"]

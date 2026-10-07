@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cruzadas.Api/Cruzadas.Api.csproj" />
+    <Project Path="src/Cruzadas.Application/Cruzadas.Application.csproj" />
+    <Project Path="src/Cruzadas.Domain/Cruzadas.Domain.csproj" />
+    <Project Path="src/Cruzadas.Infrastructure/Cruzadas.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Cruzadas.Api.IntegrationTests/Cruzadas.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Cruzadas.Application.Tests/Cruzadas.Application.Tests.csproj" />
+    <Project Path="tests/Cruzadas.Domain.Tests/Cruzadas.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
