@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Install custom / corporate CA certificates (e.g. Kaspersky SSL interception)
+COPY infra/certs/* /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 # Copy project files for caching restore layer
 COPY apps/api/src/Cruzadas.Domain/Cruzadas.Domain.csproj apps/api/src/Cruzadas.Domain/
 COPY apps/api/src/Cruzadas.Application/Cruzadas.Application.csproj apps/api/src/Cruzadas.Application/

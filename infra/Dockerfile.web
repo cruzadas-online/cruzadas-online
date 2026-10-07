@@ -2,6 +2,10 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 
+# Install custom / corporate CA certificates (e.g. Kaspersky SSL interception)
+COPY infra/certs/* /usr/local/share/ca-certificates/
+ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/kaspersky.crt
+
 COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci
 
