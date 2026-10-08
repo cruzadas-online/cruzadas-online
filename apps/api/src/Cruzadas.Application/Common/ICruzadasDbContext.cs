@@ -10,6 +10,7 @@ public interface ICruzadasDbContext
     DbSet<Question> Questions { get; }
     DbSet<QuizAttempt> QuizAttempts { get; }
     DbSet<AttemptAnswer> AttemptAnswers { get; }
+    DbSet<AppLog> AppLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

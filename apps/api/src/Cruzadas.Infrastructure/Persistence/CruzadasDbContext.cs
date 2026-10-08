@@ -18,6 +18,7 @@ public class CruzadasDbContext : DbContext, ICruzadasDbContext
     public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
     public DbSet<AttemptQuestion> AttemptQuestions => Set<AttemptQuestion>();
     public DbSet<AttemptAnswer> AttemptAnswers => Set<AttemptAnswer>();
+    public DbSet<AppLog> AppLogs => Set<AppLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,4 +1,6 @@
 using Cruzadas.Application.Common;
+using Cruzadas.Application.Interfaces;
+using Cruzadas.Infrastructure.Logging;
 using Cruzadas.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +36,11 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ICruzadasDbContext>(sp => sp.GetRequiredService<CruzadasDbContext>());
+
+        // Database Structured Logging
+        services.AddSingleton<DbAppLogger>();
+        services.AddSingleton<IAppLogger>(sp => sp.GetRequiredService<DbAppLogger>());
+        services.AddHostedService<DbLogProcessorHostedService>();
 
         return services;
     }
