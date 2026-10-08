@@ -27,7 +27,8 @@ export const Header: React.FC<HeaderProps> = ({ onGoHome, onOpenDonation }) => {
               aria-label="Apoiar o projeto Cruzadas.online com PIX"
             >
               <span className="donation-heart-icon" aria-hidden="true">♥</span>
-              <span>Apoiar Projeto</span>
+              <span className="donation-text-full">Apoiar Projeto</span>
+              <span className="donation-text-short">Apoiar</span>
             </button>
           )}
         </div>
