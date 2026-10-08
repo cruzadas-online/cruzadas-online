@@ -1,6 +1,7 @@
 using Cruzadas.Application.Common;
 using Cruzadas.Application.DTOs;
 using Cruzadas.Application.Interfaces;
+using Cruzadas.Domain.Entities;
 using Cruzadas.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -200,6 +201,7 @@ public class QuizService : IQuizService
             AttemptId: attempt.Id,
             QuizId: quiz.Id,
             QuizTitle: quiz.Title,
+            QuizSlug: quiz.Slug,
             TotalQuestions: attempt.TotalQuestions,
             Questions: questionDtos);
     }
@@ -212,9 +214,46 @@ public class QuizService : IQuizService
     {
         var normalizedSlug = slug.Trim().ToLowerInvariant();
 
-        var quiz = await _context.Quizzes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.Slug == normalizedSlug, cancellationToken);
+        Quiz? quiz;
+        if (normalizedSlug == "random")
+        {
+            var attemptInfo = await _context.QuizAttempts
+                .AsNoTracking()
+                .Select(a => new { a.Id, a.QuizId })
+                .FirstOrDefaultAsync(a => a.Id == attemptId, cancellationToken);
+
+            if (attemptInfo == null)
+            {
+                throw new KeyNotFoundException($"Tentativa '{attemptId}' não encontrada.");
+            }
+
+            quiz = await _context.Quizzes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Id == attemptInfo.QuizId, cancellationToken);
+        }
+        else
+        {
+            quiz = await _context.Quizzes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Slug == normalizedSlug, cancellationToken);
+
+            // Fallback: se o slug fornecido na rota não corresponder exatamente mas a tentativa existir,
+            // resolve o Quiz associado à tentativa
+            if (quiz == null)
+            {
+                var attemptInfo = await _context.QuizAttempts
+                    .AsNoTracking()
+                    .Select(a => new { a.Id, a.QuizId })
+                    .FirstOrDefaultAsync(a => a.Id == attemptId, cancellationToken);
+
+                if (attemptInfo != null)
+                {
+                    quiz = await _context.Quizzes
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(q => q.Id == attemptInfo.QuizId, cancellationToken);
+                }
+            }
+        }
 
         if (quiz == null)
         {

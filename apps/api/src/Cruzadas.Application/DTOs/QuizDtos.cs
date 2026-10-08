@@ -42,6 +42,7 @@ public record StartAttemptResponseDto(
     Guid AttemptId,
     Guid QuizId,
     string QuizTitle,
+    string QuizSlug,
     int TotalQuestions,
     IReadOnlyList<QuizQuestionDto> Questions);
 
