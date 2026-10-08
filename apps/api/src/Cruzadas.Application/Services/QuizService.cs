@@ -12,11 +12,13 @@ public class QuizService : IQuizService
 {
     private readonly ICruzadasDbContext _context;
     private readonly ILogger<QuizService> _logger;
+    private readonly IAppLogger? _appLogger;
 
-    public QuizService(ICruzadasDbContext context, ILogger<QuizService> logger)
+    public QuizService(ICruzadasDbContext context, ILogger<QuizService> logger, IAppLogger? appLogger = null)
     {
         _context = context;
         _logger = logger;
+        _appLogger = appLogger;
     }
 
     public async Task<IReadOnlyList<QuizGroupDto>> GetQuizGroupsAsync(CancellationToken cancellationToken = default)
@@ -123,6 +125,13 @@ public class QuizService : IQuizService
         }
 
         var randomSlug = publishedSlugs[Random.Shared.Next(publishedSlugs.Count)];
+
+        _appLogger?.LogInformation(
+            category: "Cruzadas.Application.QuizService",
+            message: $"Partida rápida sorteada: '{randomSlug}'.",
+            eventName: "RandomQuizStarted",
+            properties: new { SelectedSlug = randomSlug });
+
         return await StartAttemptAsync(randomSlug, cancellationToken);
     }
 
@@ -178,6 +187,18 @@ public class QuizService : IQuizService
 
         _logger.LogInformation("Tentativa iniciada. QuizId: {QuizId}, AttemptId: {AttemptId}, Questoes: {Total}",
             quiz.Id, attempt.Id, attempt.TotalQuestions);
+
+        _appLogger?.LogInformation(
+            category: "Cruzadas.Application.QuizService",
+            message: $"Tentativa de quiz iniciada: '{quiz.Slug}'.",
+            eventName: "QuizAttemptStarted",
+            properties: new
+            {
+                AttemptId = attempt.Id,
+                QuizId = quiz.Id,
+                QuizSlug = quiz.Slug,
+                TotalQuestions = attempt.TotalQuestions
+            });
 
         var questionsMap = quiz.Questions.ToDictionary(q => q.Id);
         var orderedAttemptQuestions = attempt.AttemptQuestions.OrderBy(aq => aq.Order).ToList();
@@ -272,6 +293,12 @@ public class QuizService : IQuizService
 
         if (attempt.IsCompleted)
         {
+            _appLogger?.LogWarning(
+                category: "Cruzadas.Application.QuizService",
+                message: $"Tentativa '{attempt.Id}' já foi finalizada anteriormente.",
+                eventName: "AttemptAlreadyCompleted",
+                properties: new { AttemptId = attempt.Id, QuizSlug = quiz.Slug });
+
             throw new AttemptAlreadyCompletedException(attempt.Id);
         }
 
@@ -289,6 +316,25 @@ public class QuizService : IQuizService
 
         _logger.LogInformation("Tentativa finalizada. AttemptId: {AttemptId}, Acertos: {Correct}/{Total} ({Percentage}%)",
             attempt.Id, attempt.CorrectAnswersCount, attempt.TotalQuestions, attempt.ScorePercentage);
+
+        var durationSeconds = attempt.CompletedAt.HasValue
+            ? (int)(attempt.CompletedAt.Value - attempt.StartedAt).TotalSeconds
+            : (int)(now - attempt.StartedAt).TotalSeconds;
+
+        _appLogger?.LogInformation(
+            category: "Cruzadas.Application.QuizService",
+            message: $"Tentativa de quiz concluída: '{quiz.Slug}' com nota {attempt.ScorePercentage}%.",
+            eventName: "QuizAttemptCompleted",
+            properties: new
+            {
+                AttemptId = attempt.Id,
+                QuizId = quiz.Id,
+                QuizSlug = quiz.Slug,
+                CorrectAnswersCount = attempt.CorrectAnswersCount,
+                TotalQuestions = attempt.TotalQuestions,
+                ScorePercentage = attempt.ScorePercentage,
+                DurationSeconds = durationSeconds
+            });
 
         var questionsMap = questions.ToDictionary(q => q.Id);
         var answersMap = attempt.Answers.ToDictionary(a => a.QuestionId);

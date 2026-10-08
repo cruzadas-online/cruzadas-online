@@ -178,4 +178,15 @@ A partir de 08/10/2026, **é estritamente proibido realizar commits ou merges di
    - Modal de apoio com QR Code vetorial e botão "Copiar Código Pix (Copia e Cola)".
    - Configuração centralizada em `apps/web/src/config/donation.ts` para fácil substituição pelos dados oficiais do titular.
    - Gatilhos amigáveis no cabeçalho, no rodapé e na tela de resultado de cada partida.
+4. **Logs Estruturados no Banco de Dados (`app_logs`):**
+   - Entidade `AppLog` e tabela `app_logs` com índices em `Timestamp`, `Level` e `EventName`.
+   - Escrita assíncrona não bloqueante de alta performance via `System.Threading.Channels.Channel<AppLog>` e background worker (`DbLogProcessorHostedService`).
+   - Interface `IAppLogger` implementada por `DbAppLogger` com suporte a metadados (`PropertiesJson`), `TraceId` e stack trace de exceções.
+   - Eventos instrumentados:
+     - `RandomQuizStarted`: sorteio de quiz para partida rápida.
+     - `QuizAttemptStarted`: início de partida com total de questões.
+     - `QuizAttemptCompleted`: finalização com acertos, pontuação percentual e tempo decorrido em segundos.
+     - `AttemptAlreadyCompleted`: aviso (warning) de tentativa duplicada.
+     - `HttpRequestFailed` e `UnhandledException`: captura global de falhas e 4xx/500 via middleware.
+
 
