@@ -257,4 +257,22 @@ public class QuizServiceTests
         Assert.Equal("Fundamentos da Fé", attempt.QuizTitle);
         Assert.Equal(2, attempt.TotalQuestions);
     }
+
+    [Fact]
+    public async Task StartAttemptAsync_ReturnsAllOptionsWithConsecutiveDisplayOrders()
+    {
+        using var context = CreateInMemoryDbContext();
+        var quiz = SeedQuiz(context, isPublished: true, slug: "quiz-options");
+
+        var service = new QuizService(context, NullLogger<QuizService>.Instance);
+        var attempt = await service.StartAttemptAsync(quiz.Slug);
+
+        Assert.NotNull(attempt);
+        foreach (var q in attempt.Questions)
+        {
+            Assert.NotEmpty(q.Options);
+            var orders = q.Options.Select(o => o.Order).ToList();
+            Assert.Equal(Enumerable.Range(1, q.Options.Count), orders);
+        }
+    }
 }
