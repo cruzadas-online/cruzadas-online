@@ -99,6 +99,7 @@ export const App: React.FC = () => {
     try {
       const attemptData = await api.startAttempt(game.slug);
       setActiveAttempt(attemptData);
+      setActiveQuizSlug(attemptData.quizSlug || game.slug);
       setViewMode('playing');
     } catch (err) {
       const msg = err instanceof ApiError
@@ -117,7 +118,7 @@ export const App: React.FC = () => {
     try {
       const attemptData = await api.startRandomAttempt();
       setActiveAttempt(attemptData);
-      setActiveQuizSlug(attemptData.quizTitle.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+      setActiveQuizSlug(attemptData.quizSlug);
       setViewMode('playing');
     } catch (err) {
       const msg = err instanceof ApiError

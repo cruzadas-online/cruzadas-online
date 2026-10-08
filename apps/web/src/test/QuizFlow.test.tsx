@@ -43,6 +43,7 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
     attemptId: 'att-1234',
     quizId: 'quiz-1',
     quizTitle: 'Quiz Católico — Fundamentos da Fé',
+    quizSlug: 'fundamentos-da-fe',
     totalQuestions: 2,
     questions: [
       {
@@ -209,6 +210,12 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
         return Promise.resolve(new Response(JSON.stringify(mockAttempt), { status: 201 }));
       }
 
+      if (url.includes('/complete')) {
+        // Confirma que a URL chamada contém o slug real 'fundamentos-da-fe'
+        expect(url).toContain('/quizzes/fundamentos-da-fe/attempts/att-1234/complete');
+        return Promise.resolve(new Response(JSON.stringify(mockResult), { status: 200 }));
+      }
+
       return Promise.reject(new Error(`Unhandled request to ${url}`));
     });
 
@@ -223,6 +230,25 @@ describe('Fluxo Completo do Quiz Católico no Cruzadas.online', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Quantos são os sacramentos da Igreja Católica?')).toBeInTheDocument();
+    });
+
+    // Responder Q1
+    await user.click(screen.getByText('7 sacramentos'));
+    await user.click(screen.getByRole('button', { name: /próxima questão/i }));
+
+    // Responder Q2
+    await waitFor(() => {
+      expect(screen.getByText('Quantos livros compõem a Bíblia católica completa?')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('73 livros'));
+
+    // Finalizar Partida
+    await user.click(screen.getByRole('button', { name: /concluir quiz/i }));
+
+    // Verificar tela de resultado
+    await waitFor(() => {
+      expect(screen.getByText('Partida Concluída')).toBeInTheDocument();
+      expect(screen.getByText('100')).toBeInTheDocument();
     });
   });
 });

@@ -45,6 +45,7 @@ export interface StartAttemptResponse {
   attemptId: string;
   quizId: string;
   quizTitle: string;
+  quizSlug: string;
   totalQuestions: number;
   questions: QuizQuestion[];
 }
