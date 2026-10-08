@@ -5,14 +5,17 @@ import { GameCatalog } from './components/GameCatalog';
 import { QuizPlay } from './components/QuizPlay';
 import { QuizResultView } from './components/QuizResultView';
 import { api, ApiError } from './api/client';
-import type { GameItem, StartAttemptResponse, QuizResult } from './types';
+import type { GameItem, QuizGroup, StartAttemptResponse, QuizResult } from './types';
 
 type ViewMode = 'catalog' | 'loading_quiz' | 'playing' | 'submitting' | 'result' | 'error';
 
 export const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('catalog');
   const [games, setGames] = useState<GameItem[]>([]);
+  const [groups, setGroups] = useState<QuizGroup[]>([]);
+  const [selectedGroupSlug, setSelectedGroupSlug] = useState<string | null>(null);
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(true);
+  const [isStartingRandom, setIsStartingRandom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Active quiz session state
@@ -20,12 +23,16 @@ export const App: React.FC = () => {
   const [activeAttempt, setActiveAttempt] = useState<StartAttemptResponse | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
-  const loadCatalog = useCallback(async () => {
+  const loadInitialData = useCallback(async () => {
     setIsLoadingCatalog(true);
     setErrorMessage(null);
     try {
-      const data = await api.getGamesCatalog();
-      setGames(data);
+      const [gamesData, groupsData] = await Promise.all([
+        api.getGamesCatalog(),
+        api.getQuizGroups(),
+      ]);
+      setGames(gamesData);
+      setGroups(groupsData);
     } catch (err) {
       const message = err instanceof ApiError
         ? `${err.message}${err.details ? `: ${err.details}` : ''}`
@@ -38,10 +45,11 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     let ignore = false;
-    api.getGamesCatalog()
-      .then((data) => {
+    Promise.all([api.getGamesCatalog(), api.getQuizGroups()])
+      .then(([gamesData, groupsData]) => {
         if (!ignore) {
-          setGames(data);
+          setGames(gamesData);
+          setGroups(groupsData);
           setErrorMessage(null);
         }
       })
@@ -64,6 +72,23 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  const handleSelectGroup = async (groupSlug: string | null) => {
+    setSelectedGroupSlug(groupSlug);
+    setIsLoadingCatalog(true);
+    setErrorMessage(null);
+    try {
+      const data = await api.getGamesCatalog(groupSlug || undefined);
+      setGames(data);
+    } catch (err) {
+      const message = err instanceof ApiError
+        ? `${err.message}${err.details ? `: ${err.details}` : ''}`
+        : 'Não foi possível filtrar os jogos.';
+      setErrorMessage(message);
+    } finally {
+      setIsLoadingCatalog(false);
+    }
+  };
+
   const handleStartQuiz = async (game: GameItem) => {
     setViewMode('loading_quiz');
     setErrorMessage(null);
@@ -79,6 +104,28 @@ export const App: React.FC = () => {
         : 'Falha ao iniciar a partida. Tente novamente.';
       setErrorMessage(msg);
       setViewMode('error');
+    }
+  };
+
+  const handleStartRandomQuiz = async () => {
+    setIsStartingRandom(true);
+    setViewMode('loading_quiz');
+    setErrorMessage(null);
+
+    try {
+      const attemptData = await api.startRandomAttempt();
+      setActiveAttempt(attemptData);
+      // Extrair o slug ou usar tentativa
+      setActiveQuizSlug(attemptData.quizTitle.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+      setViewMode('playing');
+    } catch (err) {
+      const msg = err instanceof ApiError
+        ? `${err.message}${err.details ? ` (${err.details})` : ''}`
+        : 'Falha ao sortear e iniciar a partida rápida.';
+      setErrorMessage(msg);
+      setViewMode('error');
+    } finally {
+      setIsStartingRandom(false);
     }
   };
 
@@ -133,8 +180,13 @@ export const App: React.FC = () => {
           {viewMode === 'catalog' && (
             <GameCatalog
               games={games}
+              groups={groups}
+              selectedGroupSlug={selectedGroupSlug}
+              onSelectGroup={handleSelectGroup}
               onSelectGame={handleStartQuiz}
+              onStartRandomQuiz={handleStartRandomQuiz}
               isLoading={isLoadingCatalog}
+              isStartingRandom={isStartingRandom}
             />
           )}
 
@@ -176,7 +228,7 @@ export const App: React.FC = () => {
               <button
                 onClick={() => {
                   handleGoHome();
-                  void loadCatalog();
+                  void loadInitialData();
                 }}
                 className="btn btn-primary"
                 style={{ maxWidth: '240px', margin: '0 auto' }}

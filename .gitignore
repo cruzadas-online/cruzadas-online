@@ -21,6 +21,7 @@ Thumbs.db
 # IDE local state
 .idea/
 .vscode/
+.vs/
 *.suo
 *.user
 *.userosscache

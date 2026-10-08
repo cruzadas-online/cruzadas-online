@@ -12,6 +12,7 @@ public class CruzadasDbContext : DbContext, ICruzadasDbContext
     }
 
     public DbSet<Quiz> Quizzes => Set<Quiz>();
+    public DbSet<QuizGroup> QuizGroups => Set<QuizGroup>();
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
     public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();

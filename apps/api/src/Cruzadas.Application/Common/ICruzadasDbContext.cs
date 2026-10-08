@@ -6,6 +6,7 @@ namespace Cruzadas.Application.Common;
 public interface ICruzadasDbContext
 {
     DbSet<Quiz> Quizzes { get; }
+    DbSet<QuizGroup> QuizGroups { get; }
     DbSet<Question> Questions { get; }
     DbSet<QuizAttempt> QuizAttempts { get; }
     DbSet<AttemptAnswer> AttemptAnswers { get; }

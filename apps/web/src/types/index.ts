@@ -6,6 +6,18 @@ export interface GameItem {
   category: string;
   status: string;
   isAvailable: boolean;
+  difficultyLevel?: string;
+  groupSlug?: string;
+}
+
+export interface QuizGroup {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  displayOrder: number;
+  quizzes: GameItem[];
 }
 
 export interface QuizDetail {

@@ -18,12 +18,50 @@ public class QuizService : IQuizService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<GameItemDto>> GetGamesCatalogAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<QuizGroupDto>> GetQuizGroupsAsync(CancellationToken cancellationToken = default)
     {
-        var publishedQuizzes = await _context.Quizzes
+        var groups = await _context.QuizGroups
             .AsNoTracking()
-            .Where(q => q.IsPublished)
-            .OrderBy(q => q.Title)
+            .Include(g => g.Quizzes.Where(q => q.IsPublished))
+            .OrderBy(g => g.DisplayOrder)
+            .ToListAsync(cancellationToken);
+
+        return groups.Select(g => new QuizGroupDto(
+            Id: g.Id,
+            Name: g.Name,
+            Slug: g.Slug,
+            Description: g.Description,
+            Icon: g.Icon,
+            DisplayOrder: g.DisplayOrder,
+            Quizzes: g.Quizzes.Select(q => new GameItemDto(
+                Id: q.Id.ToString(),
+                Title: q.Title,
+                Slug: q.Slug,
+                Description: q.Description,
+                Category: g.Name,
+                Status: "Disponível",
+                IsAvailable: true,
+                DifficultyLevel: q.DifficultyLevel,
+                GroupSlug: g.Slug)).ToList()
+        )).ToList();
+    }
+
+    public async Task<IReadOnlyList<GameItemDto>> GetGamesCatalogAsync(string? groupSlug = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Quizzes
+            .AsNoTracking()
+            .Include(q => q.Group)
+            .Where(q => q.IsPublished);
+
+        if (!string.IsNullOrWhiteSpace(groupSlug))
+        {
+            var normalizedGroup = groupSlug.Trim().ToLowerInvariant();
+            query = query.Where(q => q.Group != null && q.Group.Slug == normalizedGroup);
+        }
+
+        var publishedQuizzes = await query
+            .OrderBy(q => q.Group != null ? q.Group.DisplayOrder : 99)
+            .ThenBy(q => q.Title)
             .ToListAsync(cancellationToken);
 
         var games = new List<GameItemDto>();
@@ -36,31 +74,55 @@ public class QuizService : IQuizService
                 Title: q.Title,
                 Slug: q.Slug,
                 Description: q.Description,
-                Category: "Quiz",
+                Category: q.Group?.Name ?? "Quiz",
                 Status: "Disponível",
-                IsAvailable: true));
+                IsAvailable: true,
+                DifficultyLevel: q.DifficultyLevel,
+                GroupSlug: q.Group?.Slug));
         }
 
-        // Showcase coming games (without false functionality)
-        games.Add(new GameItemDto(
-            Id: "future-crossword",
-            Title: "Palavras Cruzadas da Tradição",
-            Slug: "palavras-cruzadas",
-            Description: "Cruzadas bíblicas e históricas para exercitar a memória católica.",
-            Category: "Palavras Cruzadas",
-            Status: "Em breve",
-            IsAvailable: false));
+        // Se nenhum filtro específico foi aplicado, inclui os teasers futuros
+        if (string.IsNullOrWhiteSpace(groupSlug))
+        {
+            games.Add(new GameItemDto(
+                Id: "future-crossword",
+                Title: "Palavras Cruzadas da Tradição",
+                Slug: "palavras-cruzadas",
+                Description: "Cruzadas bíblicas e históricas para exercitar a memória católica.",
+                Category: "Palavras Cruzadas",
+                Status: "Em breve",
+                IsAvailable: false,
+                DifficultyLevel: "Intermediário"));
 
-        games.Add(new GameItemDto(
-            Id: "future-wordsearch",
-            Title: "Caça-Palavras dos Santos",
-            Slug: "caca-palavras",
-            Description: "Encontre nomes de santos, virtudes e termos litúrgicos.",
-            Category: "Caça-Palavras",
-            Status: "Em breve",
-            IsAvailable: false));
+            games.Add(new GameItemDto(
+                Id: "future-wordsearch",
+                Title: "Caça-Palavras dos Santos",
+                Slug: "caca-palavras",
+                Description: "Encontre nomes de santos, virtudes e termos litúrgicos.",
+                Category: "Caça-Palavras",
+                Status: "Em breve",
+                IsAvailable: false,
+                DifficultyLevel: "Iniciante"));
+        }
 
         return games;
+    }
+
+    public async Task<StartAttemptResponseDto> StartRandomAttemptAsync(CancellationToken cancellationToken = default)
+    {
+        var publishedSlugs = await _context.Quizzes
+            .AsNoTracking()
+            .Where(q => q.IsPublished)
+            .Select(q => q.Slug)
+            .ToListAsync(cancellationToken);
+
+        if (publishedSlugs.Count == 0)
+        {
+            throw new KeyNotFoundException("Nenhum quiz publicado disponível no momento.");
+        }
+
+        var randomSlug = publishedSlugs[Random.Shared.Next(publishedSlugs.Count)];
+        return await StartAttemptAsync(randomSlug, cancellationToken);
     }
 
     public async Task<QuizDetailDto> GetQuizBySlugAsync(string slug, CancellationToken cancellationToken = default)
