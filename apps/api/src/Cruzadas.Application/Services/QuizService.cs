@@ -187,10 +187,10 @@ public class QuizService : IQuizService
         {
             if (questionsMap.TryGetValue(aq.QuestionId, out var q))
             {
-                // Never expose IsCorrect to client
+                // Never expose IsCorrect to client; randomize options order so the correct answer is not always in the same position
                 var options = q.Options
-                    .OrderBy(o => o.DisplayOrder)
-                    .Select(o => new AnswerOptionDto(o.Id, o.Text, o.DisplayOrder))
+                    .OrderBy(_ => Random.Shared.Next())
+                    .Select((o, index) => new AnswerOptionDto(o.Id, o.Text, index + 1))
                     .ToList();
 
                 questionDtos.Add(new QuizQuestionDto(q.Id, q.Text, aq.Order, options));
