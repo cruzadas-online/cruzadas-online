@@ -130,3 +130,52 @@ docker compose down
    - Adicionar tabela de ranking baseada em tempo de conclusão e percentual de acertos.
 4. **Modo Escuro / Claro**:
    - As variáveis em `index.css` estão preparadas para suporte a tema adaptativo (`prefers-color-scheme`) ou alternador de tema manual.
+
+---
+
+## 7. Diretrizes Obrigatórias de Fluxo Git e Pull Requests
+
+A partir de 08/10/2026, **é estritamente proibido realizar commits ou merges diretos na branch `main`**. O fluxo de trabalho padrão deve seguir as etapas abaixo:
+
+### Regras do Fluxo:
+1. **Nova Branch a partir da `main`:**
+   Toda nova tarefa, correção ou feature deve iniciar a partir de uma nova branch criada da `main` atualizada:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/<nome-da-feature>   # ou fix/<nome-da-correcao>
+   ```
+2. **Desenvolvimento e Validação:**
+   - Implementação do código.
+   - Execução e aprovação de todos os testes unitários e de integração (`dotnet test`, `npm test`, `npm run build`).
+3. **Commit e Push:**
+   - Commits semânticos e objetivos na feature branch:
+   ```bash
+   git add .
+   git commit -m "feat/fix(escopo): descrição da alteração"
+   git push -u origin feature/<nome-da-feature>
+   ```
+4. **Abertura de Pull Request para `main`:**
+   - Ao finalizar a implementação e validação, criar o Pull Request formal direcionado para a `main` via GitHub CLI (`gh`):
+   ```bash
+   gh pr create --base main --head feature/<nome-da-feature> --title "..." --body "..."
+   ```
+5. **Revisão e Merge:**
+   - O merge na `main` deve ocorrer preferencialmente via Pull Request após validação do usuário.
+
+---
+
+## 8. Funcionalidades Recentes Entregues
+
+1. **Múltiplos Grupos de Quizzes e Partida Rápida:**
+   - Agrupamento em 4 categorias ricas: Doutrina e Sacramentos, Sagradas Escrituras, História e Tradição, Liturgia e Oração.
+   - Filtro por chips na tela inicial e botão de sorteio aleatório ("Jogar Partida Rápida").
+2. **Acesso Externo LAN / WAN:**
+   - Roteamento relativo no frontend (`/api/v1`) via reverse proxy Nginx (`cruzadas-web`).
+   - Política de CORS dinâmica para ambiente de desenvolvimento no backend.
+   - Permite acesso direto por celulares e dispositivos na rede local (ex.: `http://<IP_LAN>:5175`).
+3. **Apoio e Contribuição via PIX:**
+   - Modal de apoio com QR Code vetorial e botão "Copiar Código Pix (Copia e Cola)".
+   - Configuração centralizada em `apps/web/src/config/donation.ts` para fácil substituição pelos dados oficiais do titular.
+   - Gatilhos amigáveis no cabeçalho, no rodapé e na tela de resultado de cada partida.
+
