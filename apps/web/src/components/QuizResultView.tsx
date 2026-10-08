@@ -5,12 +5,14 @@ interface QuizResultViewProps {
   result: QuizResult;
   onPlayAgain: () => void;
   onBackToCatalog: () => void;
+  onOpenDonation?: () => void;
 }
 
 export const QuizResultView: React.FC<QuizResultViewProps> = ({
   result,
   onPlayAgain,
   onBackToCatalog,
+  onOpenDonation,
 }) => {
   const getFeedbackMessage = (percentage: number) => {
     if (percentage >= 90) {
@@ -68,6 +70,28 @@ export const QuizResultView: React.FC<QuizResultViewProps> = ({
           </button>
         </div>
       </section>
+
+      {/* Support / Donation Callout */}
+      {onOpenDonation && (
+        <section className="result-donation-card" aria-label="Apoio ao Projeto">
+          <div className="result-donation-content">
+            <div className="result-donation-icon" aria-hidden="true">♥</div>
+            <div>
+              <h3 className="result-donation-title">Gostou deste Quiz? Apoie o Cruzadas.online</h3>
+              <p className="result-donation-text">
+                Somos um projeto independente dedicado à cultura e formação católica. Sua contribuição via PIX nos ajuda a cobrir custos de servidores e a criar novos desafios bíblicos e teológicos.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenDonation}
+            className="btn btn-donation-cta"
+            aria-label="Apoiar com PIX"
+          >
+            ✠ Contribuir via PIX
+          </button>
+        </section>
+      )}
 
       {/* Review Section */}
       <section className="reviews-section" aria-labelledby="reviews-heading">

@@ -2,9 +2,10 @@ import React from 'react';
 
 interface HeaderProps {
   onGoHome: () => void;
+  onOpenDonation?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onGoHome }) => {
+export const Header: React.FC<HeaderProps> = ({ onGoHome, onOpenDonation }) => {
   return (
     <header className="site-header" role="banner">
       <div className="container header-inner">
@@ -16,7 +17,20 @@ export const Header: React.FC<HeaderProps> = ({ onGoHome }) => {
           <span className="brand-emblem" aria-hidden="true">✠</span>
           <span>Cruzadas<span style={{ color: 'var(--color-gold-light)' }}>.online</span></span>
         </button>
-        <span className="brand-tagline">Jogos de Fé e Cultura</span>
+        <div className="header-actions">
+          <span className="brand-tagline">Jogos de Fé e Cultura</span>
+          {onOpenDonation && (
+            <button
+              onClick={onOpenDonation}
+              className="btn-donation-header"
+              title="Apoie o Cruzadas.online via PIX"
+              aria-label="Apoiar o projeto Cruzadas.online com PIX"
+            >
+              <span className="donation-heart-icon" aria-hidden="true">♥</span>
+              <span>Apoiar Projeto</span>
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 import { GameCatalog } from './components/GameCatalog';
 import { QuizPlay } from './components/QuizPlay';
 import { QuizResultView } from './components/QuizResultView';
+import { DonationModal } from './components/DonationModal';
 import { api, ApiError } from './api/client';
 import type { GameItem, QuizGroup, StartAttemptResponse, QuizResult } from './types';
 
@@ -17,6 +18,7 @@ export const App: React.FC = () => {
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(true);
   const [isStartingRandom, setIsStartingRandom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
   // Active quiz session state
   const [activeQuizSlug, setActiveQuizSlug] = useState<string>('fundamentos-da-fe');
@@ -115,7 +117,6 @@ export const App: React.FC = () => {
     try {
       const attemptData = await api.startRandomAttempt();
       setActiveAttempt(attemptData);
-      // Extrair o slug ou usar tentativa
       setActiveQuizSlug(attemptData.quizTitle.toLowerCase().replace(/[^a-z0-9]/g, '-'));
       setViewMode('playing');
     } catch (err) {
@@ -173,7 +174,10 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <Header onGoHome={handleGoHome} />
+      <Header
+        onGoHome={handleGoHome}
+        onOpenDonation={() => setIsDonationModalOpen(true)}
+      />
 
       <main className="main-content" id="main-content">
         <div className="container">
@@ -218,6 +222,7 @@ export const App: React.FC = () => {
               result={quizResult}
               onPlayAgain={handlePlayAgain}
               onBackToCatalog={handleGoHome}
+              onOpenDonation={() => setIsDonationModalOpen(true)}
             />
           )}
 
@@ -240,7 +245,13 @@ export const App: React.FC = () => {
         </div>
       </main>
 
-      <Footer />
+      <Footer onOpenDonation={() => setIsDonationModalOpen(true)} />
+
+      {/* PIX Donation Modal */}
+      <DonationModal
+        isOpen={isDonationModalOpen}
+        onClose={() => setIsDonationModalOpen(false)}
+      />
     </div>
   );
 };

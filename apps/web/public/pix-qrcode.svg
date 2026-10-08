@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="100%" height="100%">
+  <defs>
+    <radialGradient id="pixGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </radialGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="300" height="300" rx="16" fill="url(#pixGlow)"/>
+  <rect x="10" y="10" width="280" height="280" rx="12" fill="none" stroke="#E2E8F0" stroke-width="2"/>
+
+  <!-- Top-Left Finder Pattern -->
+  <rect x="30" y="30" width="60" height="60" rx="8" fill="#152238"/>
+  <rect x="40" y="40" width="40" height="40" rx="4" fill="#ffffff"/>
+  <rect x="48" y="48" width="24" height="24" rx="2" fill="#8B1E1E"/>
+
+  <!-- Top-Right Finder Pattern -->
+  <rect x="210" y="30" width="60" height="60" rx="8" fill="#152238"/>
+  <rect x="220" y="40" width="40" height="40" rx="4" fill="#ffffff"/>
+  <rect x="228" y="48" width="24" height="24" rx="2" fill="#8B1E1E"/>
+
+  <!-- Bottom-Left Finder Pattern -->
+  <rect x="30" y="210" width="60" height="60" rx="8" fill="#152238"/>
+  <rect x="40" y="220" width="40" height="40" rx="4" fill="#ffffff"/>
+  <rect x="48" y="228" width="24" height="24" rx="2" fill="#8B1E1E"/>
+
+  <!-- QR Matrix Modules Grid Simulation (clean, stylized QR code modules) -->
+  <g fill="#1E293B">
+    <!-- Row 1 & 2 -->
+    <rect x="105" y="32" width="12" height="12" rx="2"/>
+    <rect x="125" y="32" width="12" height="12" rx="2"/>
+    <rect x="155" y="32" width="12" height="12" rx="2"/>
+    <rect x="180" y="32" width="12" height="12" rx="2"/>
+    <rect x="105" y="52" width="12" height="12" rx="2"/>
+    <rect x="140" y="52" width="12" height="12" rx="2"/>
+    <rect x="165" y="52" width="12" height="12" rx="2"/>
+
+    <!-- Row 3 & 4 -->
+    <rect x="105" y="75" width="12" height="12" rx="2"/>
+    <rect x="125" y="75" width="12" height="12" rx="2"/>
+    <rect x="145" y="75" width="12" height="12" rx="2"/>
+    <rect x="180" y="75" width="12" height="12" rx="2"/>
+
+    <!-- Alignment horizontal patterns -->
+    <rect x="30" y="105" width="12" height="12" rx="2"/>
+    <rect x="52" y="105" width="12" height="12" rx="2"/>
+    <rect x="75" y="105" width="12" height="12" rx="2"/>
+    <rect x="105" y="105" width="12" height="12" rx="2"/>
+    <rect x="165" y="105" width="12" height="12" rx="2"/>
+    <rect x="215" y="105" width="12" height="12" rx="2"/>
+    <rect x="240" y="105" width="12" height="12" rx="2"/>
+
+    <!-- Center surrounding area -->
+    <rect x="30" y="125" width="12" height="12" rx="2"/>
+    <rect x="65" y="125" width="12" height="12" rx="2"/>
+    <rect x="85" y="125" width="12" height="12" rx="2"/>
+    <rect x="205" y="125" width="12" height="12" rx="2"/>
+    <rect x="245" y="125" width="12" height="12" rx="2"/>
+
+    <rect x="45" y="145" width="12" height="12" rx="2"/>
+    <rect x="75" y="145" width="12" height="12" rx="2"/>
+    <rect x="215" y="145" width="12" height="12" rx="2"/>
+    <rect x="255" y="145" width="12" height="12" rx="2"/>
+
+    <rect x="30" y="165" width="12" height="12" rx="2"/>
+    <rect x="65" y="165" width="12" height="12" rx="2"/>
+    <rect x="85" y="165" width="12" height="12" rx="2"/>
+    <rect x="205" y="165" width="12" height="12" rx="2"/>
+    <rect x="235" y="165" width="12" height="12" rx="2"/>
+
+    <!-- Lower rows -->
+    <rect x="105" y="185" width="12" height="12" rx="2"/>
+    <rect x="135" y="185" width="12" height="12" rx="2"/>
+    <rect x="160" y="185" width="12" height="12" rx="2"/>
+    <rect x="180" y="185" width="12" height="12" rx="2"/>
+
+    <rect x="105" y="215" width="12" height="12" rx="2"/>
+    <rect x="125" y="215" width="12" height="12" rx="2"/>
+    <rect x="150" y="215" width="12" height="12" rx="2"/>
+    <rect x="180" y="215" width="12" height="12" rx="2"/>
+    <rect x="220" y="215" width="12" height="12" rx="2"/>
+    <rect x="250" y="215" width="12" height="12" rx="2"/>
+
+    <rect x="115" y="240" width="12" height="12" rx="2"/>
+    <rect x="145" y="240" width="12" height="12" rx="2"/>
+    <rect x="175" y="240" width="12" height="12" rx="2"/>
+    <rect x="210" y="240" width="12" height="12" rx="2"/>
+    <rect x="240" y="240" width="12" height="12" rx="2"/>
+  </g>
+
+  <!-- Stylized Center Badge (Cross & Cruzadas.online) -->
+  <g filter="url(#shadow)">
+    <circle cx="150" cy="150" r="32" fill="#ffffff" stroke="#D4AF37" stroke-width="3"/>
+    <circle cx="150" cy="150" r="26" fill="#8B1E1E"/>
+    <!-- Cross emblem -->
+    <text x="150" y="157" font-family="serif" font-size="24" font-weight="bold" fill="#D4AF37" text-anchor="middle" dominant-baseline="central">✠</text>
+  </g>
+
+  <!-- Bottom subtle tag -->
+  <rect x="90" y="272" width="120" height="20" rx="10" fill="#32BCAD"/>
+  <text x="150" y="285" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="1">PIX • DEMO</text>
+</svg>
