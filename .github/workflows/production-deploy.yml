@@ -1,4 +1,4 @@
-name: Deploy Finance App to Production
+name: Deploy Cruzadas App to Production
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
 env:
   DEPLOY_HOST: app.admdg.com.br
   DEPLOY_USER: ubuntu
-  DEPLOY_PATH: /home/ubuntu/app/finance_app
+  DEPLOY_PATH: /home/ubuntu/app/cruzadas_app
   SSH_PORT: "22"
 
 jobs:
