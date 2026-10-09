@@ -128,6 +128,16 @@ Suba apenas o PostgreSQL do projeto ou utilize sua instância local:
 docker compose up cruzadas-db -d
 ```
 
+Em produção, a conta PostgreSQL informada em `ConnectionStrings__DefaultConnection` precisa
+ter acesso ao banco e permissão para criar as tabelas das migrations no schema `public`.
+Execute como administrador do PostgreSQL, substituindo os valores pelos da sua implantação:
+
+```sql
+GRANT CONNECT ON DATABASE cruzadas TO cruzadas_user;
+\c cruzadas
+GRANT USAGE, CREATE ON SCHEMA public TO cruzadas_user;
+```
+
 #### 2. Backend API (.NET 10)
 ```bash
 dotnet run --project apps/api/src/Cruzadas.Api/Cruzadas.Api.csproj
