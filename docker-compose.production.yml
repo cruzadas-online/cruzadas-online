@@ -1,0 +1,38 @@
+name: cruzadas-online
+
+services:
+  cruzadas-api:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    container_name: cruzadas-api
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      Database__Provider: ${DATABASE_PROVIDER:-Npgsql}
+      Database__AutoMigrate: ${DATABASE_AUTO_MIGRATE:-true}
+      Database__AutoSeed: ${DATABASE_AUTO_SEED:-true}
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection:?ConnectionStrings__DefaultConnection must be set in .env}
+    ports:
+      - "${CRUZADAS_API_PORT:-5185}:8080"
+    networks:
+      - cruzadas_net
+    restart: unless-stopped
+
+  cruzadas-web:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+    container_name: cruzadas-web
+    ports:
+      - "${CRUZADAS_WEB_PORT:-5175}:80"
+    depends_on:
+      - cruzadas-api
+    networks:
+      - cruzadas_net
+    restart: unless-stopped
+
+networks:
+  cruzadas_net:
+    name: cruzadas_net
