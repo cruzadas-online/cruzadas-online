@@ -14,6 +14,8 @@ services:
       Database__AutoMigrate: ${DATABASE_AUTO_MIGRATE:-true}
       Database__AutoSeed: ${DATABASE_AUTO_SEED:-true}
       ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection:?ConnectionStrings__DefaultConnection must be set in .env}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"      
     ports:
       - "${CRUZADAS_API_PORT:-5185}:8080"
     networks:
