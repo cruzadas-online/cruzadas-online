@@ -41,6 +41,23 @@ jobs:
         run: |
           printf '%s' "${{ vars.DEPLOY_ENV_BASE64 }}" | base64 --decode > .env
           test -s .env
+          printf '\n' >> .env
+          env_value() { grep -m1 "^$1=" .env | cut -d= -f2- | tr -d '\r'; }
+          if ! grep -q '^DATABASE_PROVIDER=' .env; then
+            echo 'DATABASE_PROVIDER=Npgsql' >> .env
+          fi
+          if ! grep -q '^ConnectionStrings__DefaultConnection=' .env; then
+            db_host="$(env_value DATABASE_URL)"
+            db_port="$(env_value CRUZADAS_DB_PORT)"
+            db_name="$(env_value POSTGRES_DB)"
+            db_user="$(env_value POSTGRES_USER)"
+            db_pass="$(env_value POSTGRES_PASSWORD)"
+            if [ -z "$db_host" ] || [ -z "$db_name" ] || [ -z "$db_user" ] || [ -z "$db_pass" ]; then
+              echo 'DEPLOY_ENV_BASE64 must define ConnectionStrings__DefaultConnection (or DATABASE_URL, POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD)' >&2
+              exit 1
+            fi
+            echo "ConnectionStrings__DefaultConnection=Host=$db_host;Port=${db_port:-5432};Database=$db_name;Username=$db_user;Password=$db_pass" >> .env
+          fi
           grep -q '^ConnectionStrings__DefaultConnection=' .env
           grep -q '^DATABASE_PROVIDER=Npgsql$' .env
 
