@@ -6,6 +6,14 @@ import { QuizPlay } from './components/QuizPlay';
 import { QuizResultView } from './components/QuizResultView';
 import { DonationModal } from './components/DonationModal';
 import { api, ApiError } from './api/client';
+import {
+  trackGameStarted,
+  trackGameCompleted,
+  shouldPromptDonation,
+  recordPromptShown,
+  markUserDonated,
+  getPlayTrackerData,
+} from './utils/playTracker';
 import type { GameItem, QuizGroup, StartAttemptResponse, QuizResult } from './types';
 
 type ViewMode = 'catalog' | 'loading_quiz' | 'playing' | 'submitting' | 'result' | 'error';
@@ -19,6 +27,8 @@ export const App: React.FC = () => {
   const [isStartingRandom, setIsStartingRandom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  const [isAutomaticDonationPrompt, setIsAutomaticDonationPrompt] = useState(false);
+  const [userHasDonated, setUserHasDonated] = useState(() => getPlayTrackerData().hasDonated);
 
   // Active quiz session state
   const [activeQuizSlug, setActiveQuizSlug] = useState<string>('fundamentos-da-fe');
@@ -91,7 +101,17 @@ export const App: React.FC = () => {
     }
   };
 
+  const checkAndTriggerDonationPrompt = () => {
+    if (shouldPromptDonation()) {
+      recordPromptShown();
+      setIsAutomaticDonationPrompt(true);
+      setIsDonationModalOpen(true);
+    }
+  };
+
   const handleStartQuiz = async (game: GameItem) => {
+    // Registra início de partida (conta parciais e completas)
+    trackGameStarted();
     setViewMode('loading_quiz');
     setErrorMessage(null);
     setActiveQuizSlug(game.slug);
@@ -111,6 +131,8 @@ export const App: React.FC = () => {
   };
 
   const handleStartRandomQuiz = async () => {
+    // Registra início de partida (conta parciais e completas)
+    trackGameStarted();
     setIsStartingRandom(true);
     setViewMode('loading_quiz');
     setErrorMessage(null);
@@ -139,8 +161,12 @@ export const App: React.FC = () => {
 
     try {
       const resultData = await api.completeAttempt(activeQuizSlug, activeAttempt.attemptId, answers);
+      trackGameCompleted();
       setQuizResult(resultData);
       setViewMode('result');
+
+      // Ao finalizar a partida com sucesso, verificar se é momento de exibir o modal de apoio
+      checkAndTriggerDonationPrompt();
     } catch (err) {
       const msg = err instanceof ApiError
         ? `${err.message}${err.details ? ` (${err.details})` : ''}`
@@ -151,6 +177,8 @@ export const App: React.FC = () => {
   };
 
   const handlePlayAgain = async () => {
+    // Registra nova partida iniciada
+    trackGameStarted();
     setViewMode('loading_quiz');
     setErrorMessage(null);
 
@@ -167,17 +195,33 @@ export const App: React.FC = () => {
   };
 
   const handleGoHome = () => {
+    // Se o usuário desistiu/saiu da partida no meio, avalia momento de prompt sem interromper
+    const wasPlaying = viewMode === 'playing';
     setActiveAttempt(null);
     setQuizResult(null);
     setErrorMessage(null);
     setViewMode('catalog');
+
+    if (wasPlaying) {
+      checkAndTriggerDonationPrompt();
+    }
+  };
+
+  const handleOpenManualDonation = () => {
+    setIsAutomaticDonationPrompt(false);
+    setIsDonationModalOpen(true);
+  };
+
+  const handleMarkUserDonated = () => {
+    const updated = markUserDonated();
+    setUserHasDonated(updated.hasDonated);
   };
 
   return (
     <div className="app-shell">
       <Header
         onGoHome={handleGoHome}
-        onOpenDonation={() => setIsDonationModalOpen(true)}
+        onOpenDonation={handleOpenManualDonation}
       />
 
       <main className="main-content" id="main-content">
@@ -223,7 +267,7 @@ export const App: React.FC = () => {
               result={quizResult}
               onPlayAgain={handlePlayAgain}
               onBackToCatalog={handleGoHome}
-              onOpenDonation={() => setIsDonationModalOpen(true)}
+              onOpenDonation={handleOpenManualDonation}
             />
           )}
 
@@ -246,12 +290,15 @@ export const App: React.FC = () => {
         </div>
       </main>
 
-      <Footer onOpenDonation={() => setIsDonationModalOpen(true)} />
+      <Footer onOpenDonation={handleOpenManualDonation} />
 
       {/* PIX Donation Modal */}
       <DonationModal
         isOpen={isDonationModalOpen}
         onClose={() => setIsDonationModalOpen(false)}
+        isAutomaticPrompt={isAutomaticDonationPrompt}
+        hasDonated={userHasDonated}
+        onMarkDonated={handleMarkUserDonated}
       />
     </div>
   );

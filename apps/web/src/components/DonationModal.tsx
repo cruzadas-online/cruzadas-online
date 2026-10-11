@@ -4,10 +4,24 @@ import { DONATION_CONFIG } from '../config/donation';
 interface DonationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isAutomaticPrompt?: boolean;
+  hasDonated?: boolean;
+  onMarkDonated?: () => void;
 }
 
-export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose }) => {
+export const DonationModal: React.FC<DonationModalProps> = ({
+  isOpen,
+  onClose,
+  isAutomaticPrompt = false,
+  hasDonated = false,
+  onMarkDonated,
+}) => {
   const [copiedType, setCopiedType] = useState<'code' | 'key' | null>(null);
+  const [markedDonatedLocally, setMarkedDonatedLocally] = useState(false);
+
+  useEffect(() => {
+    setMarkedDonatedLocally(false);
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {
@@ -55,6 +69,15 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
     }
   };
 
+  const handleConfirmDonated = () => {
+    setMarkedDonatedLocally(true);
+    if (onMarkDonated) {
+      onMarkDonated();
+    }
+  };
+
+  const isUserDonor = hasDonated || markedDonatedLocally;
+
   return (
     <div
       className="donation-backdrop"
@@ -78,13 +101,39 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
         </button>
 
         <div className="donation-header">
-          <span className="donation-badge">✠ Apoio ao Apostolado</span>
+          {isUserDonor ? (
+            <span className="donation-badge donation-badge-donor">
+              💛 Benfeitor do Cruzadas.online
+            </span>
+          ) : (
+            <span className="donation-badge">✠ Apoio ao Apostolado</span>
+          )}
+
           <h2 id="donation-modal-title" className="donation-title">
-            Apoie o Cruzadas.online
+            {isUserDonor
+              ? 'Nossa gratidão por manter o projeto vivo!'
+              : isAutomaticPrompt
+              ? 'Que bom ter você jogando conosco!'
+              : 'Apoie o Cruzadas.online'}
           </h2>
+
           <p className="donation-subtitle">
-            Ajude a manter a plataforma no ar, 100% gratuita e sem anúncios invasivos para
-            todos que buscam aprofundar seu conhecimento na fé e na cultura cristã.
+            {isUserDonor ? (
+              <>
+                Sua generosidade permite manter servidores ativos e conteúdo católico autêntico
+                e gratuito. Que Deus recompense o seu apoio generoso a esta missão!
+              </>
+            ) : isAutomaticPrompt ? (
+              <>
+                Notamos que você tem aproveitado nossos jogos! O <strong>Cruzadas.online</strong> é mantido
+                100% por doações da comunidade, sem anúncios incômodos. Considere fazer uma contribuição via Pix para nos apoiar.
+              </>
+            ) : (
+              <>
+                Ajude a manter a plataforma no ar, 100% gratuita e sem anúncios invasivos para
+                todos que buscam aprofundar seu conhecimento na fé e na cultura cristã.
+              </>
+            )}
           </p>
         </div>
 
@@ -176,6 +225,24 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
             <li>Selecione <strong>Pix</strong> e escolha <strong>Ler QR Code</strong> ou <strong>Pix Copia e Cola</strong>.</li>
             <li>Defina o valor que desejar (R$ 2, R$ 5, R$ 10 ou mais) e confirme a contribuição.</li>
           </ol>
+        </div>
+
+        {/* Already Donated Button / Status */}
+        <div className="donation-donor-action">
+          {isUserDonor ? (
+            <div className="donor-status-card" role="status">
+              <span className="donor-check-icon">✓</span>
+              <span>Você já marcou sua contribuição! Deus lhe pague pelo zelo e generosidade.</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-already-donated"
+              onClick={handleConfirmDonated}
+            >
+              💛 Já realizei uma contribuição
+            </button>
+          )}
         </div>
 
         <div className="donation-footer">

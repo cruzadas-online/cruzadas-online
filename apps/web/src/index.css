@@ -1386,6 +1386,61 @@ button {
   line-height: 1.6;
 }
 
+/* Donor status and action button */
+.donation-badge-donor {
+  background-color: rgba(212, 175, 55, 0.2);
+  color: #8c6a06;
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.donation-donor-action {
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-already-donated {
+  background: transparent;
+  color: var(--color-gold-dark);
+  border: 1px dashed var(--color-gold);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.btn-already-donated:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--color-gold-dark);
+  transform: translateY(-1px);
+}
+
+.donor-status-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: #f6fbf7;
+  border: 1px solid #b8e2c3;
+  color: #1e6b37;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+}
+
+.donor-check-icon {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1e6b37;
+}
+
 /* Modal Footer */
 .donation-footer {
   text-align: center;

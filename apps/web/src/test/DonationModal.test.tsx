@@ -56,4 +56,49 @@ describe('DonationModal Component', () => {
     expect(writeTextMock).toHaveBeenCalledWith(DONATION_CONFIG.pixCopiaECola);
     expect(await screen.findByText(/Código Pix Copiado!/i)).toBeInTheDocument();
   });
+
+  it('deve exibir botão para marcar contribuição e chamar callback onMarkDonated', () => {
+    const onMarkDonatedMock = vi.fn();
+    render(
+      <DonationModal
+        isOpen={true}
+        onClose={onCloseMock}
+        onMarkDonated={onMarkDonatedMock}
+        hasDonated={false}
+      />
+    );
+
+    const alreadyDonatedBtn = screen.getByText(/Já realizei uma contribuição/i);
+    expect(alreadyDonatedBtn).toBeInTheDocument();
+
+    fireEvent.click(alreadyDonatedBtn);
+    expect(onMarkDonatedMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/Você já marcou sua contribuição!/i)).toBeInTheDocument();
+  });
+
+  it('deve exibir mensagem de benfeitor e gratidão quando hasDonated é true', () => {
+    render(
+      <DonationModal
+        isOpen={true}
+        onClose={onCloseMock}
+        hasDonated={true}
+      />
+    );
+
+    expect(screen.getByText(/Benfeitor do Cruzadas.online/i)).toBeInTheDocument();
+    expect(screen.getByText(/Nossa gratidão por manter o projeto vivo!/i)).toBeInTheDocument();
+  });
+
+  it('deve exibir mensagem de engajamento no prompt automático para não-doador', () => {
+    render(
+      <DonationModal
+        isOpen={true}
+        onClose={onCloseMock}
+        isAutomaticPrompt={true}
+        hasDonated={false}
+      />
+    );
+
+    expect(screen.getByText(/Que bom ter você jogando conosco!/i)).toBeInTheDocument();
+  });
 });

@@ -195,3 +195,14 @@ A partir de 08/10/2026, **é estritamente proibido realizar commits ou merges di
      - **Iniciante:** `As Cruzadas e a Defesa da Cristandade` (`cruzadas-e-cristandade`) — O Concílio de Clermont (1095), *Deus Vult*, Godofredo de Bouillon (*Advocatus Sancti Sepulchri*), Hugues de Payens, São Bernardo de Claraval, voto monástico e uniforme templário, Hospitalários (Ordem de Malta), defesa legítima dos peregrinos e a Batalha de Navas de Tolosa (1212).
      - **Intermediário:** `A Ordem de Cristo e as Grandes Navegações` (`ordem-de-cristo-e-navegacoes`) — Extinção administrativa pelo Papa Clemente V (Bula *Vox in Excelso*), proteção por D. Dinis, fundação canônica pelo Papa João XXII (Bula *Ad Ea Ex Quibus* de 1319), Convento de Cristo em Tomar, Infante D. Henrique, as caravelas com a Cruz de Cristo, Bula *Romanus Pontifex*, Terra de Santa Cruz (Cabral) e a Primeira Missa (Frei Henrique de Coimbra).
      - **Avançado:** `Tradição de Cavalaria e Batalhas Decisivas da Cristandade` (`cavalaria-e-batalhas-da-cristandade`) — Tratado *De Laude Novae Militiae* de São Bernardo, Mestre D. Gualdim Pais no cerco de Tomar (1190), fórmula canônica do Concílio de Vienne (*non per modum definitivae sententiae, sed per viam provisionis*), D. Frei Gil Martins (1º Grão-Mestre de Cristo), Grande Cerco de Malta (1565, Jean de La Valette), Batalha de Lepanto (1571, Papa São Pio V e D. João de Áustria), Batalha de Viena (1683, Rei João III Sobieski e os Hussardos Alados), Martim Moniz no Cerco de Lisboa (1147) e divisa do Infante (*Talant de bien faire*).
+
+6. **Contador de Partidas e Exibição Contextual do Modal de Contribuição:**
+   - **Rastreamento de Partidas com Privacidade:** Implementado via `localStorage` do navegador (`playTracker.ts`), eliminando a necessidade de registrar endereços IP em banco de dados, em total conformidade com a LGPD e evitando problemas com IPs dinâmicos ou compartilhados.
+   - **Contagem Abrangente:** Contabiliza tanto partidas iniciadas (parciais) quanto concluídas (completas).
+   - **Experiência do Usuário Não Invasiva:** O modal nunca interrompe o usuário enquanto ele está lendo uma pergunta ou ao entrar na aplicação. O disparo automático ocorre unicamente nos momentos de conclusão natural (tela de resultados) ou ao encerrar a partida voltando ao catálogo.
+   - **Regras de Exibição:**
+     - 1ª exibição: após o usuário jogar 3 partidas.
+     - Próximas exibições para não-doadores: a cada 5 novas partidas jogadas.
+   - **Reconhecimento de Doadores ("Já realizei uma contribuição"):**
+     - O modal possui um botão amigável onde o usuário pode confirmar que já contribuiu.
+     - Ao marcar a contribuição, o intervalo é ampliado para 15 partidas e o modal passa a exibir uma mensagem personalizada de gratidão ("Benfeitor do Cruzadas.online - Nossa gratidão por manter o projeto vivo!").
